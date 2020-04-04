@@ -87,11 +87,11 @@ impl Bits{
 }
 
 pub fn entropy(data: &Vec<u8>) -> f64{
-    let sum = data.iter().fold(0_u64, |a, b| a+*b as u64);
     let mut temp = [0_u64; 256];
     for d in data{
         temp[*d as usize] += 1;
     }
+    let sum = temp.iter().fold(0_u64, |a, b| a+*b as u64);
     temp.iter().fold(0.0, |acc, x| if *x > 0{
         acc - (*x as f64/ sum as f64) * ((*x) as f64 / sum as f64).log2()
     }  else{
