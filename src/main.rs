@@ -1,9 +1,9 @@
 use lzw_with_universal_coder::elias_gamma::EliasGamma;
-use lzw_with_universal_coder::universal_coding::{UniversalCode};
+use lzw_with_universal_coder::universal_coding::UniversalCode;
 use lzw_with_universal_coder::elias_delta::EliasDelta;
 use lzw_with_universal_coder::elias_omega::EliasOmega;
 use lzw_with_universal_coder::fibonacci::Fibonacci;
-use lzw_with_universal_coder::dictionary::Dictionary;
+use lzw_with_universal_coder::dictionary::{Dictionary};
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -25,7 +25,7 @@ fn encode<X, Y>(data: X) -> Y
     where X: AsRef<[u8]>, Y: UniversalCode {
     println!("Coding...");
     let mut prev = vec![];
-    let mut res= Y::new();
+    let mut res = Y::new();
     let data = data.as_ref();
     let mut dictionary = Dictionary::new();
     let mut percent = 0;
@@ -57,7 +57,6 @@ fn encode<X, Y>(data: X) -> Y
 }
 
 
-
 fn decode<X>(mut data: X) -> Vec<u8>
     where X: UniversalCode {
     println!("Decoding...");
@@ -73,7 +72,7 @@ fn decode<X>(mut data: X) -> Vec<u8>
                 code = c;
             }
         }
-        if (data.index() as f64 * 100.0) / data.len() as f64 > percent as f64{
+        if (data.index() as f64 * 100.0) / data.len() as f64 > percent as f64 {
             print_bar(percent);
             percent += 1;
         }
@@ -92,10 +91,10 @@ fn decode<X>(mut data: X) -> Vec<u8>
     }
 }
 
-fn compression_statistics<X: UniversalCode>(before: &Vec<u8>, after: &X){
+fn compression_statistics<X: UniversalCode>(before: &Vec<u8>, after: &X) {
     println!("Size before {}B", before.len());
-    println!("Size after {}B", after.len()/8);
-    println!("Compression ration {}%", (after.len()/8) as f32 * 100.0/ before.len() as f32);
+    println!("Size after {}B", after.len() / 8);
+    println!("Compression ration {}%", (after.len() / 8) as f32 * 100.0 / before.len() as f32);
     println!("Entropy before {}", entropy(&before));
     println!("Entropy after {}", after.entropy());
 }
@@ -151,7 +150,7 @@ fn main() {
             return;
         }
     }
-    match operation{
+    match operation {
         'e' => {
             let mut file;
             match File::open(path_from.clone()) {
@@ -167,12 +166,12 @@ fn main() {
                     println!("Unable to read file {}", path_from);
                     return;
                 }
-                Ok(_) => {},
+                Ok(_) => {}
             }
             match code {
                 'g' => {
                     let gamma: EliasGamma = encode(&data);
-                    match gamma.save_to_file(path_to){
+                    match gamma.save_to_file(path_to) {
                         Ok(()) => {
                             compression_statistics(&data, &gamma);
                         }
@@ -184,7 +183,7 @@ fn main() {
                 }
                 'd' => {
                     let delta: EliasDelta = encode(&data);
-                    match delta.save_to_file(path_to){
+                    match delta.save_to_file(path_to) {
                         Ok(()) => {
                             compression_statistics(&data, &delta);
                         }
@@ -196,7 +195,7 @@ fn main() {
                 }
                 'o' => {
                     let omega: EliasOmega = encode(&data);
-                    match omega.save_to_file(path_to){
+                    match omega.save_to_file(path_to) {
                         Ok(()) => {
                             compression_statistics(&data, &omega);
                         }
@@ -208,7 +207,7 @@ fn main() {
                 }
                 'f' => {
                     let fib: Fibonacci = encode(&data);
-                    match fib.save_to_file(path_to){
+                    match fib.save_to_file(path_to) {
                         Ok(()) => {
                             compression_statistics(&data, &fib);
                         }
@@ -225,7 +224,7 @@ fn main() {
             match code {
                 'g' => {
                     let c;
-                    match EliasGamma::read_from_file(path_from){
+                    match EliasGamma::read_from_file(path_from) {
                         Ok(r) => c = r,
                         Err(e) => {
                             println!("{}", e);
@@ -246,19 +245,19 @@ fn main() {
                             println!("Unable to write file {}", path_to.clone());
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                     match file.sync_all() {
                         Err(_e) => {
                             println!("Unable to write file {}", path_to);
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                 }
                 'd' => {
                     let c;
-                    match EliasDelta::read_from_file(path_from){
+                    match EliasDelta::read_from_file(path_from) {
                         Ok(r) => c = r,
                         Err(e) => {
                             println!("{}", e);
@@ -279,19 +278,19 @@ fn main() {
                             println!("Unable to write file {}", path_to.clone());
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                     match file.sync_all() {
                         Err(_e) => {
                             println!("Unable to write file {}", path_to);
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                 }
-                'o' =>{
+                'o' => {
                     let c;
-                    match EliasOmega::read_from_file(path_from){
+                    match EliasOmega::read_from_file(path_from) {
                         Ok(r) => c = r,
                         Err(e) => {
                             println!("{}", e);
@@ -312,19 +311,19 @@ fn main() {
                             println!("Unable to write file {}", path_to.clone());
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                     match file.sync_all() {
                         Err(_e) => {
                             println!("Unable to write file {}", path_to);
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                 }
                 'f' => {
                     let c;
-                    match Fibonacci::read_from_file(path_from){
+                    match Fibonacci::read_from_file(path_from) {
                         Ok(r) => c = r,
                         Err(e) => {
                             println!("{}", e);
@@ -345,19 +344,18 @@ fn main() {
                             println!("Unable to write file {}", path_to.clone());
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                     match file.sync_all() {
                         Err(_e) => {
                             println!("Unable to write file {}", path_to);
                             return;
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     }
                 }
                 _ => {}//panic("Unknown coding"),
             }
-
         }
         _ => {}//panic("Wrong operation")
     }

@@ -21,6 +21,7 @@ impl IndexMut<usize> for Dictionary {
 }
 
 impl Dictionary {
+    const MAX_SIZE:usize = 4194304;
     pub fn new() -> Self {
         let mut res = Self {
             words: Vec::new(),
@@ -59,14 +60,14 @@ impl Dictionary {
     pub fn add(&mut self, seq: Vec<u8>) -> Option<usize> {
         match self.word_position(&seq) {
             None => {
-                //return if self.words.len() < Self::MAX_SIZE {
-                self.tree.add(seq.as_slice(), self.words.len());
-                self.words.push(seq);
-
-                Some(self.words.len())
-                //} else {
-                //    None
-                //};
+                return if self.words.len() < Self::MAX_SIZE {
+                    self.tree.add(seq.as_slice(), self.words.len());
+                    //eprintln!("{} {:?}", self.words.len(), seq);
+                    self.words.push(seq);
+                    Some(self.words.len())
+                } else {
+                    None
+                };
             }
             Some(v) => Some(v)
         }
@@ -78,7 +79,7 @@ impl Dictionary {
 }
 
 #[derive(Debug, Clone)]
-enum WordsTree{
+pub enum WordsTree{
     Node(usize, Box<Vec<WordsTree>>),
     Leaf
 }
