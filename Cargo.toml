@@ -1,5 +1,5 @@
 [package]
-name = "LZW_with_universal_coder"
+name = "lzw_with_universal_coder"
 version = "0.1.0"
 authors = ["Marek <marekbauer07@gmail.com>"]
 edition = "2018"

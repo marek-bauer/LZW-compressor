@@ -1,13 +1,14 @@
-use coding_list3::elias_gamma::EliasGamma;
-use coding_list3::universal_coding::{UniversalCode};
-use coding_list3::elias_delta::EliasDelta;
-use coding_list3::elias_omega::EliasOmega;
-use coding_list3::fibonacci::Fibonacci;
-use coding_list3::dictionary::Dictionary;
+use lzw_with_universal_coder::elias_gamma::EliasGamma;
+use lzw_with_universal_coder::universal_coding::{UniversalCode};
+use lzw_with_universal_coder::elias_delta::EliasDelta;
+use lzw_with_universal_coder::elias_omega::EliasOmega;
+use lzw_with_universal_coder::fibonacci::Fibonacci;
+use lzw_with_universal_coder::dictionary::Dictionary;
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
-use coding_list3::bits::entropy;
+use lzw_with_universal_coder::bits::entropy;
+
 
 fn print_bar(p: u32) {
     print!("|");
