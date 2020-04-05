@@ -1,70 +1,70 @@
 use crate::bits::Bits;
-use crate::universal_coding::{UniversalCode, UniversalCodeIter};
+use crate::universal_coding::{UniversalCode, UniversalCodeIter, Creatable};
 use std::path::Path;
 
 #[derive(Debug)]
 pub struct Fibonacci {
     data: Bits,
     index: usize,
-    fib: Vec<u64>
+    fib: Vec<u64>,
 }
 
 impl Fibonacci {
     pub fn read_from_file<X>(path: X) -> Result<Self, String> where X: AsRef<Path> {
-        Ok(Self{
+        Ok(Self {
             data: Bits::read_from_file(path)?,
             index: 0,
-            fib: vec![1,1]
+            fib: vec![1, 1],
         })
     }
 
-    fn generate_fib_till(&mut self, code: u64){
+    fn generate_fib_till(&mut self, code: u64) {
         while self.fib[self.fib.len() - 1] < code {
             self.fib.push(self.fib[self.fib.len() - 1] + self.fib[self.fib.len() - 2]);
         }
     }
 
-    fn generate_fib(&mut self, n: usize){
+    fn generate_fib(&mut self, n: usize) {
         while self.fib.len() <= n {
             self.fib.push(self.fib[self.fib.len() - 1] + self.fib[self.fib.len() - 2]);
         }
     }
 
-    fn get_largest_smaller_fib(&mut self, code: u64) -> usize{
-        self.generate_fib_till(code+1);
+    fn get_largest_smaller_fib(&mut self, code: u64) -> usize {
+        self.generate_fib_till(code + 1);
         let mut i = 1;
-        loop{
+        loop {
             if code < self.fib[i] {
-                return i-1;
+                return i - 1;
             }
             i += 1;
         }
     }
 }
 
-impl UniversalCode for Fibonacci {
-    //type UniIterator = UniversalCodeIter<Fibonacci>;
-
-    fn new() -> Self{
-        Self{
+impl Creatable for Fibonacci {
+    fn new() -> Self {
+        Self {
             data: Bits::new(),
             index: 0,
-            fib: vec![1,1]
+            fib: vec![1, 1],
         }
     }
+}
 
+impl UniversalCode for Fibonacci {
     fn get(&mut self) -> Option<u64> {
         let mut n = 0;
         let mut res = 0_u64;
         let mut prev = false;
-        loop{
+        loop {
             match self.data.get(self.index) {
                 None => return None,
-                Some(x) =>{
+                Some(x) => {
                     self.index += 1;
-                    n+=1;
+                    n += 1;
                     if x {
-                        if prev{
+                        if prev {
                             return Some(res - 1);
                         } else {
                             self.generate_fib(n);
@@ -84,14 +84,14 @@ impl UniversalCode for Fibonacci {
         code -= self.fib[n];
         while code > 0 {
             let m = self.get_largest_smaller_fib(code);
-            for _ in m..(n-1){
+            for _ in m..(n - 1) {
                 buffer.push(false);
             }
             buffer.push(true);
             n = m;
             code -= self.fib[n];
         }
-        for _ in 1..n{
+        for _ in 1..n {
             buffer.push(false);
         }
         for bit in buffer.into_iter().rev() {
@@ -99,13 +99,12 @@ impl UniversalCode for Fibonacci {
         }
     }
 
-    fn save_to_file<X>(&self, path: X) -> Result<(), String>
-        where X: AsRef<Path>{
+    fn save_to_file(&self, path: String) -> Result<(), String>{
         self.data.save_to_file(path)
     }
 
     fn into_iter(self) -> Box<dyn Iterator<Item=u64>> {
-        Box::new(UniversalCodeIter{
+        Box::new(UniversalCodeIter {
             c: self
         })
     }
@@ -125,7 +124,7 @@ impl UniversalCode for Fibonacci {
 
 #[cfg(test)]
 mod fib_test {
-    use crate::universal_coding::UniversalCode;
+    use crate::universal_coding::{UniversalCode, Creatable};
 
     #[test]
     fn fib_test() {

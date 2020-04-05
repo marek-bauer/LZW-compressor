@@ -1,5 +1,5 @@
 use crate::bits::Bits;
-use crate::universal_coding::{UniversalCode, UniversalCodeIter};
+use crate::universal_coding::{UniversalCode, UniversalCodeIter, Creatable};
 use std::path::Path;
 
 #[derive(Debug)]
@@ -30,16 +30,16 @@ impl EliasOmega {
     }
 }
 
-impl UniversalCode for EliasOmega {
-    //type UniIterator = UniversalCodeIter<EliasOmega>;
-
+impl Creatable for EliasOmega {
     fn new() -> Self {
         Self {
             data: Bits::new(),
             index: 0,
         }
     }
+}
 
+impl UniversalCode for EliasOmega {
     fn get(&mut self) -> Option<u64> {
         let mut n = 1;
         let mut t;
@@ -89,8 +89,7 @@ impl UniversalCode for EliasOmega {
         }
     }
 
-    fn save_to_file<X>(&self, path: X) -> Result<(), String>
-        where X: AsRef<Path> {
+    fn save_to_file(&self, path: String) -> Result<(), String>{
         self.data.save_to_file(path)
     }
 
@@ -115,7 +114,7 @@ impl UniversalCode for EliasOmega {
 
 #[cfg(test)]
 mod omega_test {
-    use crate::universal_coding::UniversalCode;
+    use crate::universal_coding::{UniversalCode, Creatable};
 
     #[test]
     fn omega_test() {

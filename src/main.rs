@@ -1,9 +1,9 @@
 use lzw_with_universal_coder::elias_gamma::EliasGamma;
-use lzw_with_universal_coder::universal_coding::UniversalCode;
+use lzw_with_universal_coder::universal_coding::{UniversalCode, Creatable};
 use lzw_with_universal_coder::elias_delta::EliasDelta;
 use lzw_with_universal_coder::elias_omega::EliasOmega;
 use lzw_with_universal_coder::fibonacci::Fibonacci;
-use lzw_with_universal_coder::dictionary::{Dictionary};
+use lzw_with_universal_coder::dictionary::Dictionary;
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -22,7 +22,7 @@ fn print_bar(p: u32) {
 }
 
 fn encode<X, Y>(data: X) -> Y
-    where X: AsRef<[u8]>, Y: UniversalCode {
+    where X: AsRef<[u8]>, Y: UniversalCode + Creatable {
     println!("Coding...");
     let mut prev = vec![];
     let mut res = Y::new();
@@ -57,8 +57,8 @@ fn encode<X, Y>(data: X) -> Y
 }
 
 
-fn decode<X>(mut data: X) -> Vec<u8>
-    where X: UniversalCode {
+fn decode<X>(data: &mut X) -> Vec<u8>
+    where X: UniversalCode + ?Sized {
     println!("Decoding...");
     let mut prev = vec![];
     let mut res = vec![];
@@ -91,7 +91,7 @@ fn decode<X>(mut data: X) -> Vec<u8>
     }
 }
 
-fn compression_statistics<X: UniversalCode>(before: &Vec<u8>, after: &X) {
+fn compression_statistics<X: UniversalCode + ?Sized>(before: &Vec<u8>, after: &X) {
     println!("Size before {}B", before.len());
     println!("Size after {}B", after.len() / 8);
     println!("Compression ration {}%", (after.len() / 8) as f32 * 100.0 / before.len() as f32);
@@ -168,193 +168,93 @@ fn main() {
                 }
                 Ok(_) => {}
             }
+            let coded_data: Box<dyn UniversalCode>;
             match code {
-                'g' => {
-                    let gamma: EliasGamma = encode(&data);
-                    match gamma.save_to_file(path_to) {
-                        Ok(()) => {
-                            compression_statistics(&data, &gamma);
-                        }
-                        Err(e) => {
-                            println!("{}", e);
-                            return;
-                        }
-                    }
+                'g' => coded_data = Box::new(encode::<&Vec<u8>, EliasGamma>(&data)),
+                'd' => coded_data = Box::new(encode::<&Vec<u8>, EliasDelta>(&data)),
+                'o' => coded_data = Box::new(encode::<&Vec<u8>, EliasOmega>(&data)),
+                'f' => coded_data = Box::new(encode::<&Vec<u8>, Fibonacci>(&data)),
+                _ => {
+                    println!("Critical error unknown coding");
+                    return;
                 }
-                'd' => {
-                    let delta: EliasDelta = encode(&data);
-                    match delta.save_to_file(path_to) {
-                        Ok(()) => {
-                            compression_statistics(&data, &delta);
-                        }
-                        Err(e) => {
-                            println!("{}", e);
-                            return;
-                        }
-                    }
+            }
+            match coded_data.save_to_file(path_to) {
+                Ok(()) => {
+                    compression_statistics(&data, &*coded_data);
                 }
-                'o' => {
-                    let omega: EliasOmega = encode(&data);
-                    match omega.save_to_file(path_to) {
-                        Ok(()) => {
-                            compression_statistics(&data, &omega);
-                        }
-                        Err(e) => {
-                            println!("{}", e);
-                            return;
-                        }
-                    }
+                Err(e) => {
+                    println!("{}", e);
+                    return;
                 }
-                'f' => {
-                    let fib: Fibonacci = encode(&data);
-                    match fib.save_to_file(path_to) {
-                        Ok(()) => {
-                            compression_statistics(&data, &fib);
-                        }
-                        Err(e) => {
-                            println!("{}", e);
-                            return;
-                        }
-                    }
-                }
-                _ => {}//panic("Unknown coding"),
             }
         }
         'd' => {
+            let mut coded_data: Box<dyn UniversalCode>;
             match code {
                 'g' => {
-                    let c;
-                    match EliasGamma::read_from_file(path_from) {
-                        Ok(r) => c = r,
-                        Err(e) => {
-                            println!("{}", e);
+                    match EliasGamma::read_from_file(path_from.clone()) {
+                        Ok(r) => coded_data = Box::new(r),
+                        Err(_) => {
+                            println!("Unable to read file {}", path_from);
                             return;
                         }
-                    }
-                    let data = decode(c);
-                    let mut file;
-                    match File::create(path_to.clone()) {
-                        Ok(f) => file = f,
-                        Err(_error) => {
-                            println!("Unable to create file {}", path_to.clone());
-                            return;
-                        }
-                    }
-                    match file.write_all(data.as_ref()) {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to.clone());
-                            return;
-                        }
-                        Ok(_) => {}
-                    }
-                    match file.sync_all() {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to);
-                            return;
-                        }
-                        Ok(_) => {}
                     }
                 }
                 'd' => {
-                    let c;
-                    match EliasDelta::read_from_file(path_from) {
-                        Ok(r) => c = r,
-                        Err(e) => {
-                            println!("{}", e);
+                    match EliasDelta::read_from_file(path_from.clone()) {
+                        Ok(r) => coded_data = Box::new(r),
+                        Err(_) => {
+                            println!("Unable to read file {}", path_from);
                             return;
                         }
-                    }
-                    let data = decode(c);
-                    let mut file;
-                    match File::create(path_to.clone()) {
-                        Ok(f) => file = f,
-                        Err(_error) => {
-                            println!("Unable to create file {}", path_to.clone());
-                            return;
-                        }
-                    }
-                    match file.write_all(data.as_ref()) {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to.clone());
-                            return;
-                        }
-                        Ok(_) => {}
-                    }
-                    match file.sync_all() {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to);
-                            return;
-                        }
-                        Ok(_) => {}
                     }
                 }
                 'o' => {
-                    let c;
-                    match EliasOmega::read_from_file(path_from) {
-                        Ok(r) => c = r,
-                        Err(e) => {
-                            println!("{}", e);
+                    match EliasOmega::read_from_file(path_from.clone()) {
+                        Ok(r) => coded_data = Box::new(r),
+                        Err(_) => {
+                            println!("Unable to read file {}", path_from);
                             return;
                         }
-                    }
-                    let data = decode(c);
-                    let mut file;
-                    match File::create(path_to.clone()) {
-                        Ok(f) => file = f,
-                        Err(_error) => {
-                            println!("Unable to create file {}", path_to.clone());
-                            return;
-                        }
-                    }
-                    match file.write_all(data.as_ref()) {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to.clone());
-                            return;
-                        }
-                        Ok(_) => {}
-                    }
-                    match file.sync_all() {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to);
-                            return;
-                        }
-                        Ok(_) => {}
                     }
                 }
                 'f' => {
-                    let c;
-                    match Fibonacci::read_from_file(path_from) {
-                        Ok(r) => c = r,
-                        Err(e) => {
-                            println!("{}", e);
+                    match Fibonacci::read_from_file(path_from.clone()) {
+                        Ok(r) => coded_data = Box::new(r),
+                        Err(_) => {
+                            println!("Unable to read file {}", path_from);
                             return;
                         }
-                    }
-                    let data = decode(c);
-                    let mut file;
-                    match File::create(path_to.clone()) {
-                        Ok(f) => file = f,
-                        Err(_error) => {
-                            println!("Unable to create file {}", path_to.clone());
-                            return;
-                        }
-                    }
-                    match file.write_all(data.as_ref()) {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to.clone());
-                            return;
-                        }
-                        Ok(_) => {}
-                    }
-                    match file.sync_all() {
-                        Err(_e) => {
-                            println!("Unable to write file {}", path_to);
-                            return;
-                        }
-                        Ok(_) => {}
                     }
                 }
-                _ => {}//panic("Unknown coding"),
+                _ => {
+                    println!("Critical error unknown coding");
+                    return;
+                }
+            }
+            let data = decode(&mut *coded_data);
+            let mut file;
+            match File::create(path_to.clone()) {
+                Ok(f) => file = f,
+                Err(_error) => {
+                    println!("Unable to create file {}", path_to.clone());
+                    return;
+                }
+            }
+            match file.write_all(data.as_ref()) {
+                Err(_e) => {
+                    println!("Unable to write file {}", path_to.clone());
+                    return;
+                }
+                Ok(_) => {}
+            }
+            match file.sync_all() {
+                Err(_e) => {
+                    println!("Unable to write file {}", path_to);
+                    return;
+                }
+                Ok(_) => {}
             }
         }
         _ => {}//panic("Wrong operation")

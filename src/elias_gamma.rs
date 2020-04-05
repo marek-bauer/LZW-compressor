@@ -1,5 +1,5 @@
 use crate::bits::Bits;
-use crate::universal_coding::{UniversalCode, UniversalCodeIter};
+use crate::universal_coding::{UniversalCode, UniversalCodeIter, Creatable};
 use std::path::Path;
 
 #[derive(Debug)]
@@ -9,7 +9,7 @@ pub struct EliasGamma {
 }
 
 impl EliasGamma {
-    const LAST_U64:u64 = 0x8000000000000000;
+    const LAST_U64: u64 = 0x8000000000000000;
 
     fn number_size(a: u64) -> u32 {
         let mut t = Self::LAST_U64;
@@ -23,30 +23,30 @@ impl EliasGamma {
     }
 
     pub fn read_from_file<X>(path: X) -> Result<Self, String> where X: AsRef<Path> {
-        Ok(Self{
+        Ok(Self {
             data: Bits::read_from_file(path)?,
-            index: 0
+            index: 0,
         })
     }
 }
 
-impl UniversalCode for EliasGamma {
-    //type UniIterator = UniversalCodeIter<EliasGamma>;
-
-    fn new() -> Self{
-        Self{
+impl Creatable for EliasGamma {
+    fn new() -> Self {
+        Self {
             data: Bits::new(),
-            index: 0
+            index: 0,
         }
     }
+}
 
+impl UniversalCode for EliasGamma {
     fn get(&mut self) -> Option<u64> {
         let mut t = 1_u64;
         let mut res = 0;
-        loop{
+        loop {
             match self.data.get(self.index) {
                 Some(true) => break,
-                Some(false) =>{
+                Some(false) => {
                     self.index += 1;
                     t <<= 1;
                 }
@@ -56,7 +56,7 @@ impl UniversalCode for EliasGamma {
         t <<= 1;
         while t > 1 {
             t >>= 1;
-            if self.data.get(self.index).unwrap(){
+            if self.data.get(self.index).unwrap() {
                 res += t;
             }
             self.index += 1;
@@ -81,13 +81,12 @@ impl UniversalCode for EliasGamma {
         }
     }
 
-    fn save_to_file<X>(&self, path: X) -> Result<(), String>
-        where X: AsRef<Path>{
+    fn save_to_file(&self, path: String) -> Result<(), String>{
         self.data.save_to_file(path)
     }
 
-    fn into_iter(self) -> Box<dyn Iterator<Item=u64>>{
-        Box::new(UniversalCodeIter{
+    fn into_iter(self) -> Box<dyn Iterator<Item=u64>> {
+        Box::new(UniversalCodeIter {
             c: self
         })
     }
@@ -107,7 +106,7 @@ impl UniversalCode for EliasGamma {
 
 #[cfg(test)]
 mod gamma_test {
-    use crate::universal_coding::UniversalCode;
+    use crate::universal_coding::{UniversalCode, Creatable};
 
     #[test]
     fn gamma_test() {
